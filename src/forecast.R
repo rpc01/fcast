@@ -1,24 +1,37 @@
-#select directory to load load data 
-#setwd("~/Documentos/Madimon/Investment/econ_outlook/fred/realgdpusa")
-#setwd("~/Documentos/Madimon/Investment/econ_outlook/fred/inflationusa")
-#setwd("~/Documentos/Madimon/Investment/econ_outlook/fred/employment_thousands_usa")
-setwd("~/Documentos/Madimon/Investment/econ_outlook/fred/unemployment_rate_usa")
+library('ProjectTemplate')
+load.project()
 
-MyData <- read.csv("data.csv", header=TRUE, sep=",")
-all<-as.timeSeries(MyData)
+ts1 <- readWorksheetFromFile("data/PAYEMS.xls",
+                            sheet=1,
+                            startRow = 11,
+                            endCol = 2) #thousand of employed
+ts1<-as.timeSeries(ts1)
+ts2<-as.timeSeries(CPIAUCSL)
+ts3<-as.timeSeries(realgdp)
+ts4<-as.timeSeries(unemployment)
 
-# subset the time series 
-#tmp = window(all,"2010-01-01",end(all)) 
-# plot series
-plot(all)
-#plot(tmp)
+tail(ts1)
+tail(ts2)
+tail(ts3)
+tail(ts4)
 
-#fit <- ets(all)
-fit <- auto.arima(all)
-#fit <- auto.arima(tmp)
+#employment is the monthly increase
+ts1<-(diff(ts1,1))
 
-forecast(fit, 1)
-plot(forecast(fit, 5))
-accuracy(fit)
+fit1 <- auto.arima(ts1)
+fit2 <- auto.arima(ts2)
+fit3 <- auto.arima(ts3)
+fit4 <- auto.arima(ts4)
 
+ts1_cast<-forecast(fit1, 1)
+ts2_cast<-forecast(fit2, 1)
+ts3_cast<-forecast(fit3, 1)
+ts4_cast<-forecast(fit4, 1)
+
+parameter<-c("Employment", "Inflation", "RealGDP", "Unemployment")
+value<-round(c(ts1_cast$mean*1000,ts2_cast$mean,ts3_cast$mean,ts4_cast$mean),2)
+#unit<-c("seasonally adjusted monthly change in nonfarm payroll employment to the nearest thousand persons", "seasonally adjusted annualized monthly percentage change in headline CPI rounded to the nearest tenth of a percent", "seasonally adjusted annualized quarter-to-quarter percentage change advance estimate of GDP from the previous final estimate of GDP, rounded to the nearest tenth of a percent", "Unemployment is the seasonally adjusted level of the headline unemployment rate in percentage points rounded to the nearest tenth of a percent")
+forecast<-data.frame(parameter, value)#%, unit)
+colnames(forecast) <- c("Parameter", "Fcast")#, "Desc")
+forecast
 

@@ -6,11 +6,18 @@ output:
   pdf_document:
     latex_engine: xelatex
 ---
-### Fredcast Forecast
-
-
-```{r setup, include=FALSE}
+# My Monthly Forecast
+```{r setup, include=FALSE, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
+library(timeSeries)
+library(forecast)
+library(jsonlite)
+library(quantmod)
+library(forecast)
+library(xtable)
+```
+```{r}
+
 ```
 
 ```{r download, include=FALSE}
@@ -22,9 +29,8 @@ file_type<-"&file_type=json"
 
 ```{r employment, cache=TRUE,include=FALSE}
 #Change in nonfarm payroll employment
-library(timeSeries)
 s1<-"series_id=PAYEMS" #seasonally adjusted monthly in nonfarm payroll employment to the nearest thousand persons
-library(jsonlite)
+
 s1<-fromJSON(paste0(url, s1, api_key,file_type))
 s1_df<-as.data.frame(s1)
 #names(s1_df)
@@ -35,7 +41,6 @@ s1<-diff(s1,1) #to compute monthly change
 ```
 
 ```{r inflation, cache=TRUE,include=FALSE}
-library(quantmod)
 s2<-"series_id=CPIAUCSL"    #"seasonally adjusted annualized monthly percentage change in headline CPI
                             #rounded to the nearest tenth of a percent"
 s2<-fromJSON(paste0(url, s2, api_key,file_type))
@@ -43,7 +48,7 @@ s2_df<-as.data.frame(s2)
 charvec<-as.Date(as.character(s2_df[,15]))
 data<-as.numeric(s2_df[,16])
 s2<-as.timeSeries(data, charvec)
-s2<-((Delt(s2, type="log"))+1)^12-1 #annualized percentage change
+s2<-(s2/lag(s2,12)-1)*100 #annualized percentage change
 ```
 
 ```{r GDP, cache=TRUE,include=FALSE}
@@ -58,6 +63,7 @@ charvec<-as.Date(as.character(s3_df[,15]))
 data<-as.numeric(s3_df[,16])
 s3<-as.timeSeries(data, charvec)
 ```
+
 ```{r unemployment, include=FALSE,cache=TRUE}
 #"Unemployment 
 s4<-"series_id=UNRATE"      #is the seasonally adjusted level of the headline
@@ -72,7 +78,7 @@ s4<-as.timeSeries(data, charvec)
 
 ```{r output, include=FALSE, cache=TRUE}
 # FORECAST
-library(forecast)
+
 fit1 <- auto.arima(s1)
 fit2 <- auto.arima(s2)
 fit3 <- auto.arima(s3)
@@ -83,16 +89,60 @@ ts2_cast<-forecast(fit2, 1)
 ts3_cast<-forecast(fit3, 1)
 ts4_cast<-forecast(fit4, 1)
 
+acc1<-accuracy(fit1)
+acc2<-accuracy(fit2)
+acc3<-accuracy(fit3)
+acc4<-accuracy(fit4)
+me1<-acc1[1,1]
+me2<-acc2[1,1]
+me3<-acc3[1,1]
+me4<-acc4[1,1]
+me<-round(c(me1,me2,me3,me4),4)
+
 parameter<-c("Employment", "Inflation", "RealGDP", "Unemployment")
-value<-round(c(ts1_cast$mean,ts2_cast$mean*100,ts3_cast$mean,ts4_cast$mean),4)
-last<-round(c(last(s1),last(s2)*100,last(s3), last(s4)),4)
-forecast<-data.frame(parameter, last, value)#%, unit)
-colnames(forecast) <- c("Parameter", "last","Fcast")#, "Desc")
+value<-round(c(ts1_cast$mean,ts2_cast$mean,ts3_cast$mean,ts4_cast$mean),4)
+last<-round(c(last(s1),last(s2),last(s3), last(s4)),4)
+forecast<-data.frame(parameter, last, value,me)#%, unit)
+colnames(forecast) <- c("Parameter", "last","Fcast","ME")#, "Desc")
 ```
 
 ```{r report, results="asis", echo=FALSE}
-library(xtable)
 xt<-xtable(forecast, comment=FALSE)
 print(xt, type="latex", comment=FALSE)
+```
+[FredCast](https://research.stlouisfed.org/useraccount/fredcast/forecast "FredCast")
+
+# Series
+
+## Payroll Employment
+Monthly Change, Seasonally Adjusted (rounded to nearest thousand persons)
+Payroll Employment is an estimate of the number of workers U.S. firms employ and send paychecks to every month. The change in payroll employment is the number of jobs added or lost over a month's time.
+
+```{r, echo=FALSE, message=FALSE}
+plot(forecast(fit1,12),main="Employment Monthly Change",36,ylab="thousands",ylim=c(-100,+400),cex.lab=0.75)
+```
+
+## Real GDP Growth
+Quarterly, Percent Change from Preceding Period, Seasonally Adjusted Annual Rate (rounded to nearest .1%).
+Real Gross Domestic Product (GDP) is the inflation-adjusted value of final goods and services produced by an economy over a period of time. Real GDP growth is the percentage change in GDP from one period to the next.
+GDP is reported as if the value of final goods and services produced in a quarter had continued over the entire year. This process, called annualization, means the quarterly growth rate for real GDP is actually the percent change between two annualized numbers, producing an annual rate.
+```{r, echo=FALSE, message=FALSE}
+plot(forecast(fit3,12),main="GDP",36,ylab="%",ylim=c(-5,5),cex.lab=0.75)
+```
+
+
+## Unemployment
+Monthly, Seasonally Adjusted (rounded to the nearest 0.1%). Unemployment caused by changes in the weather or seasons is removed by government agencies to make the underlying trend in the data easier to observe.
+```{r, echo=FALSE, message=FALSE}
+plot(forecast(fit4,12),main="Unemployment",36,ylab="%",ylim=c(4.5,7.5),cex.lab=0.75)
+```
+
+
+## CPI Inflation
+Monthly Compounded Annual Rate of Change, Seasonally Adjusted (rounded to nearest 0.1%).
+The Consumer Price Index (CPI) is a measure of the level of prices of a collection of commonly purchased goods and services (e.g., housing, transportation, food and medical care) in an economy over time. The percentage change in the CPI from one period to the next measures inflation.
+Inflation is usually reported in terms of year to year changes. In this game, you will be considering monthly changes at an annualized rate. Often, the monthly change in the CPI reflects short-term price changes in goods and services with volatile prices.
+```{r, echo=FALSE, message=FALSE}
+plot(forecast(fit2,12),main="Inflation",36,ylab="%",ylim=c(-0.5,2),cex.lab=0.75)
 ```
 

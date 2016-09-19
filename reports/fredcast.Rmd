@@ -27,7 +27,7 @@ url<-"https://api.stlouisfed.org/fred/series/observations?"
 file_type<-"&file_type=json"
 ```
 
-```{r employment, cache=TRUE,include=FALSE}
+```{r employment, cache=FALSE,include=FALSE}
 #Change in nonfarm payroll employment
 s1<-"series_id=PAYEMS" #seasonally adjusted monthly in nonfarm payroll employment to the nearest thousand persons
 
@@ -40,7 +40,7 @@ s1<-as.timeSeries(data, charvec)
 s1<-diff(s1,1) #to compute monthly change
 ```
 
-```{r inflation, cache=TRUE,include=FALSE}
+```{r inflation, cache=FALSE,include=FALSE}
 s2<-"series_id=CPIAUCSL"    #"seasonally adjusted annualized monthly percentage change in headline CPI
                             #rounded to the nearest tenth of a percent"
 s2<-fromJSON(paste0(url, s2, api_key,file_type))
@@ -51,7 +51,7 @@ s2<-as.timeSeries(data, charvec)
 s2<-(s2/lag(s2,12)-1)*100 #annualized percentage change
 ```
 
-```{r GDP, cache=TRUE,include=FALSE}
+```{r GDP, cache=FALSE,include=FALSE}
 #Real GDP Growth
 s3<-"series_id=A191RL1Q225SBEA"     #"seasonally adjusted annualized quarter-to-
                                     #quarter percentage change advance estimate 
@@ -64,7 +64,7 @@ data<-as.numeric(s3_df[,16])
 s3<-as.timeSeries(data, charvec)
 ```
 
-```{r unemployment, include=FALSE,cache=TRUE}
+```{r unemployment, include=FALSE,cache=FALSE}
 #"Unemployment 
 s4<-"series_id=UNRATE"      #is the seasonally adjusted level of the headline
                             #unemployment rate in percentage points rounded to 
@@ -76,13 +76,14 @@ data<-as.numeric(s4_df[,16])
 s4<-as.timeSeries(data, charvec)
 ```
 
-```{r output, include=FALSE, cache=TRUE}
+```{r output, include=FALSE, cache=FALSE}
 # FORECAST
 
 fit1 <- auto.arima(s1)
 fit2 <- auto.arima(s2)
 fit3 <- auto.arima(s3)
 fit4 <- auto.arima(s4)
+
 
 ts1_cast<-forecast(fit1, 1)
 ts2_cast<-forecast(fit2, 1)
@@ -144,5 +145,6 @@ The Consumer Price Index (CPI) is a measure of the level of prices of a collecti
 Inflation is usually reported in terms of year to year changes. In this game, you will be considering monthly changes at an annualized rate. Often, the monthly change in the CPI reflects short-term price changes in goods and services with volatile prices.
 ```{r, echo=FALSE, message=FALSE}
 plot(forecast(fit2,12),main="Inflation",36,ylab="%",ylim=c(-0.5,2),cex.lab=0.75)
+lines(s2,col="red")
 ```
 

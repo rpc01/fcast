@@ -1,7 +1,7 @@
 ---
 title: "FredCast"
 author: "Ramon Prat"
-date: "September 16, 2016"
+date: "September 22, 2016"
 output:
   pdf_document:
     latex_engine: xelatex
@@ -38,6 +38,7 @@ charvec<-as.Date(as.character(s1_df[,15]))
 data<-as.numeric(s1_df[,16])
 s1<-as.timeSeries(data, charvec)
 s1<-diff(s1,1) #to compute monthly change
+date_s1<-last(s1_df$observations.date)
 ```
 
 ```{r inflation, cache=FALSE,include=FALSE}
@@ -49,6 +50,8 @@ charvec<-as.Date(as.character(s2_df[,15]))
 data<-as.numeric(s2_df[,16])
 s2<-as.timeSeries(data, charvec)
 s2<-(s2/lag(s2,12)-1)*100 #annualized percentage change
+date_s2<-last(s2_df$observations.date)
+
 ```
 
 ```{r GDP, cache=FALSE,include=FALSE}
@@ -62,6 +65,7 @@ s3_df<-as.data.frame(s3)
 charvec<-as.Date(as.character(s3_df[,15]))
 data<-as.numeric(s3_df[,16])
 s3<-as.timeSeries(data, charvec)
+date_s3<-last(s3_df$observations.date)
 ```
 
 ```{r unemployment, include=FALSE,cache=FALSE}
@@ -74,6 +78,7 @@ s4_df<-as.data.frame(s4)
 charvec<-as.Date(as.character(s4_df[,15]))
 data<-as.numeric(s4_df[,16])
 s4<-as.timeSeries(data, charvec)
+date_s4<-last(s4_df$observations.date)
 ```
 
 ```{r output, include=FALSE, cache=FALSE}
@@ -85,10 +90,11 @@ fit3 <- auto.arima(s3)
 fit4 <- auto.arima(s4)
 
 
-ts1_cast<-forecast(fit1, 1)
-ts2_cast<-forecast(fit2, 1)
-ts3_cast<-forecast(fit3, 1)
-ts4_cast<-forecast(fit4, 1)
+ts1_cast3<-forecast(fit1, 3)
+ts2_cast3<-forecast(fit2, 3)
+ts3_cast3<-forecast(fit3, 3)
+ts4_cast3<-forecast(fit4, 3)
+
 
 acc1<-accuracy(fit1)
 acc2<-accuracy(fit2)
@@ -101,10 +107,12 @@ me4<-acc4[1,1]
 me<-round(c(me1,me2,me3,me4),4)
 
 parameter<-c("Employment", "Inflation", "RealGDP", "Unemployment")
-value<-round(c(ts1_cast$mean,ts2_cast$mean,ts3_cast$mean,ts4_cast$mean),4)
+avdate<-c(date_s1,date_s2,date_s3,date_s4)
+value3<-round(c(ts1_cast3$mean,ts2_cast3$mean,ts3_cast3$mean,ts4_cast3$mean),4)
+value3<-as.data.frame(matrix(c(value3),nrow=4,ncol=3,byrow=TRUE))
 last<-round(c(last(s1),last(s2),last(s3), last(s4)),4)
-forecast<-data.frame(parameter, last, value,me)#%, unit)
-colnames(forecast) <- c("Parameter", "last","Fcast","ME")#, "Desc")
+forecast<-data.frame(parameter, last,avdate, value3, me)#%, unit)
+colnames(forecast) <- c("Parameter", "last","AvDate", "Fcast+1","Fcast+2","Fcast+3","ME")#, "Desc")
 ```
 
 ```{r report, results="asis", echo=FALSE}

@@ -1,0 +1,54 @@
+---
+title: "Forecast"
+author: "Ramon Prat"
+date: "September 8, 2016"
+output: html_document
+---
+library(knitr)
+## Forecasting USA Macrodata
+
+
+```{r}
+library('ProjectTemplate')
+load.project()
+
+ts1 <- readWorksheetFromFile("data/PAYEMS.xls",
+                            sheet=1,
+                            startRow = 11,
+                            endCol = 2) #thousand of employed
+ts1<-as.timeSeries(ts1)
+ts2<-as.timeSeries(CPIAUCSL)
+ts3<-as.timeSeries(realgdp)
+ts4<-as.timeSeries(unemployment)
+
+tail(ts1)
+tail(ts2)
+tail(ts3)
+tail(ts4)
+
+#employment is the monthly increase
+ts1<-(diff(ts1,1))
+
+fit1 <- auto.arima(ts1)
+fit2 <- auto.arima(ts2)
+fit3 <- auto.arima(ts3)
+fit4 <- auto.arima(ts4)
+
+ts1_cast<-forecast(fit1, 1)
+ts2_cast<-forecast(fit2, 1)
+ts3_cast<-forecast(fit3, 1)
+ts4_cast<-forecast(fit4, 1)
+
+parameter<-c("Employment", "Inflation", "RealGDP", "Unemployment")
+value<-round(c(ts1_cast$mean*1000,ts2_cast$mean,ts3_cast$mean,ts4_cast$mean),2)
+#unit<-c("seasonally adjusted monthly change in nonfarm payroll employment to the nearest thousand persons", "seasonally adjusted annualized monthly percentage change in headline CPI rounded to the nearest tenth of a percent", "seasonally adjusted annualized quarter-to-quarter percentage change advance estimate of GDP from the previous final estimate of GDP, rounded to the nearest tenth of a percent", "Unemployment is the seasonally adjusted level of the headline unemployment rate in percentage points rounded to the nearest tenth of a percent")
+forecast<-data.frame(parameter, value)#%, unit)
+colnames(forecast) <- c("Parameter", "Fcast")#, "Desc")
+```
+
+## Including Plots
+```{r}
+forecast
+
+```
+

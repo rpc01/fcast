@@ -34,24 +34,29 @@ s1<-"series_id=PAYEMS" #seasonally adjusted monthly in nonfarm payroll employmen
 s1<-fromJSON(paste0(url, s1, api_key,file_type))
 s1_df<-as.data.frame(s1)
 #names(s1_df)
+#tail(s1_df)
 charvec<-as.Date(as.character(s1_df[,15]))
 data<-as.numeric(s1_df[,16])
 s1<-as.timeSeries(data, charvec)
 s1<-diff(s1,1) #to compute monthly change
 date_s1<-last(s1_df$observations.date)
+#date_s1
+#tail(s1)
 ```
 
 ```{r inflation, cache=FALSE,include=FALSE}
 s2<-"series_id=CPIAUCSL"    #"seasonally adjusted annualized monthly percentage change in headline CPI
-                            #rounded to the nearest tenth of a percent"
+                            #rounded to the nearest tenth of a percent"Inflation is usually reported in terms of year to year changes. In this game, you will be considering monthly changes at an annualized rate. Often, the monthly change in the CPI reflects short-term price changes in goods and services with volatile prices.
 s2<-fromJSON(paste0(url, s2, api_key,file_type))
 s2_df<-as.data.frame(s2)
 charvec<-as.Date(as.character(s2_df[,15]))
 data<-as.numeric(s2_df[,16])
 s2<-as.timeSeries(data, charvec)
-s2<-(s2/lag(s2,12)-1)*100 #annualized percentage change
+#tail(s2)
+s2<-((s2/lag(s2,1))^12-1)*100 #annualized percentage change 
 date_s2<-last(s2_df$observations.date)
-
+tail(s2)
+date_s2
 ```
 
 ```{r GDP, cache=FALSE,include=FALSE}
@@ -66,6 +71,9 @@ charvec<-as.Date(as.character(s3_df[,15]))
 data<-as.numeric(s3_df[,16])
 s3<-as.timeSeries(data, charvec)
 date_s3<-last(s3_df$observations.date)
+tail(s3)
+#date_s3
+#
 ```
 
 ```{r unemployment, include=FALSE,cache=FALSE}
@@ -79,6 +87,8 @@ charvec<-as.Date(as.character(s4_df[,15]))
 data<-as.numeric(s4_df[,16])
 s4<-as.timeSeries(data, charvec)
 date_s4<-last(s4_df$observations.date)
+#tail(s4)
+#date_s4
 ```
 
 ```{r output, include=FALSE, cache=FALSE}

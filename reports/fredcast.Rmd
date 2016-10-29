@@ -1,7 +1,7 @@
 ---
 title: "FredCast"
 author: "Ramon Prat"
-date: "September 22, 2016"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
 output:
   pdf_document:
     latex_engine: xelatex
@@ -121,8 +121,9 @@ avdate<-c(date_s1,date_s2,date_s3,date_s4)
 value3<-round(c(ts1_cast3$mean,ts2_cast3$mean,ts3_cast3$mean,ts4_cast3$mean),4)
 value3<-as.data.frame(matrix(c(value3),nrow=4,ncol=3,byrow=TRUE))
 last<-round(c(last(s1),last(s2),last(s3), last(s4)),4)
-forecast<-data.frame(parameter, last,avdate, value3, me)#%, unit)
-colnames(forecast) <- c("Parameter", "last","AvDate", "Fcast+1","Fcast+2","Fcast+3","ME")#, "Desc")
+freq<-c("monthly","monthly","quarterly","monthly")
+forecast<-data.frame(parameter,freq, last,avdate, value3, me)#%, unit)
+colnames(forecast) <- c("Parameter", "freq","last","AvDate", "Fcast+1","Fcast+2","Fcast+3","ME")#, "Desc")
 ```
 
 ```{r report, results="asis", echo=FALSE}
@@ -162,7 +163,7 @@ Monthly Compounded Annual Rate of Change, Seasonally Adjusted (rounded to neares
 The Consumer Price Index (CPI) is a measure of the level of prices of a collection of commonly purchased goods and services (e.g., housing, transportation, food and medical care) in an economy over time. The percentage change in the CPI from one period to the next measures inflation.
 Inflation is usually reported in terms of year to year changes. In this game, you will be considering monthly changes at an annualized rate. Often, the monthly change in the CPI reflects short-term price changes in goods and services with volatile prices.
 ```{r, echo=FALSE, message=FALSE}
-plot(forecast(fit2,12),main="Inflation",36,ylab="%",ylim=c(-0.5,2),cex.lab=0.75)
+plot(forecast(fit2,12),main="Inflation",36,ylab="%",ylim=c(-4,4),cex.lab=0.75)
 lines(s2,col="red")
 ```
 

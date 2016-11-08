@@ -6,7 +6,7 @@ output:
   pdf_document:
     latex_engine: xelatex
 ---
-# My Monthly Forecast
+# My Monthly Forecast of USA Macroeconomic Indicators
 ```{r setup, include=FALSE, message=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 library(timeSeries)
@@ -16,9 +16,7 @@ library(quantmod)
 library(forecast)
 library(xtable)
 ```
-```{r}
 
-```
 
 ```{r download, include=FALSE}
 #json config to download data from fred
@@ -30,19 +28,18 @@ file_type<-"&file_type=json"
 ```{r employment, cache=FALSE,include=FALSE}
 #Change in nonfarm payroll employment
 s1<-"series_id=PAYEMS" #seasonally adjusted monthly in nonfarm payroll employment to the nearest thousand persons
-
 s1<-fromJSON(paste0(url, s1, api_key,file_type))
 s1_df<-as.data.frame(s1)
-#names(s1_df)
-#tail(s1_df)
 charvec<-as.Date(as.character(s1_df[,15]))
 data<-as.numeric(s1_df[,16])
 s1<-as.timeSeries(data, charvec)
 s1<-diff(s1,1) #to compute monthly change
 date_s1<-last(s1_df$observations.date)
+value_s1<-last(s1_df$observations.value)
 #date_s1
 #tail(s1)
 ```
+
 
 ```{r inflation, cache=FALSE,include=FALSE}
 s2<-"series_id=CPIAUCSL"    #"seasonally adjusted annualized monthly percentage change in headline CPI
@@ -136,11 +133,15 @@ print(xt, type="latex", comment=FALSE)
 
 ## Payroll Employment
 Monthly Change, Seasonally Adjusted (rounded to nearest thousand persons)
-Payroll Employment is an estimate of the number of workers U.S. firms employ and send paychecks to every month. The change in payroll employment is the number of jobs added or lost over a month's time.
+Payroll Employment is an estimate of the number of workers U.S. firms employ and send paychecks to every month. Total Nonfarm, commonly known as Total Nonfarm Payroll, is a measure of the number of U.S. workers in the economy that excludes proprietors, private household employees, unpaid volunteers, farm employees, and the unincorporated self-employed. This measure accounts for approximately 80 percent of the workers who contribute to Gross Domestic Product (GDP). The change in payroll employment is the number of jobs added or lost over a month's time. On `r last(s1_df$observations.date)` Payroll Employment was `r last(s1_df$observations.value)` thousands of people, a `r last(s1)` change from `r s1_df$observations.date[length(s1_df$observations.date)-1]`.
+
+
 
 ```{r, echo=FALSE, message=FALSE}
-plot(forecast(fit1,12),main="Employment Monthly Change",36,ylab="thousands",ylim=c(-100,+400),cex.lab=0.75)
+plot(forecast(fit1,12),main="Payroll Employment Monthly Change",36,ylab="thousands",ylim=c(-100,+400),cex.lab=0.75)
 ```
+
+
 
 ## Real GDP Growth
 Quarterly, Percent Change from Preceding Period, Seasonally Adjusted Annual Rate (rounded to nearest .1%).
@@ -164,6 +165,5 @@ The Consumer Price Index (CPI) is a measure of the level of prices of a collecti
 Inflation is usually reported in terms of year to year changes. In this game, you will be considering monthly changes at an annualized rate. Often, the monthly change in the CPI reflects short-term price changes in goods and services with volatile prices.
 ```{r, echo=FALSE, message=FALSE}
 plot(forecast(fit2,12),main="Inflation",36,ylab="%",ylim=c(-4,4),cex.lab=0.75)
-lines(s2,col="red")
 ```
 

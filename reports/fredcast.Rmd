@@ -20,7 +20,10 @@ library(xtable)
 
 ```{r download, include=FALSE}
 #json config to download data from fred
-api_key<-"&api_key=9912ee381321a596b999f26cfa5da2a5"
+#api_key<-"&api_key=9912ee381321a596b999f26cfa5da2a5"
+setwd("~/Documentos/Madimon/Investment/econ_outlook/fcasts/reports")
+api_key<-source("fed_api.R")
+api_key<-api_key$value
 url<-"https://api.stlouisfed.org/fred/series/observations?"
 file_type<-"&file_type=json"
 ```
@@ -36,8 +39,8 @@ s1<-as.timeSeries(data, charvec)
 s1<-diff(s1,1) #to compute monthly change
 date_s1<-last(s1_df$observations.date)
 value_s1<-last(s1_df$observations.value)
-#date_s1
-#tail(s1)
+date_s1
+tail(s1)
 ```
 
 
@@ -55,6 +58,7 @@ date_s2<-last(s2_df$observations.date)
 tail(s2)
 date_s2
 ```
+
 
 ```{r GDP, cache=FALSE,include=FALSE}
 #Real GDP Growth

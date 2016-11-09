@@ -88,6 +88,23 @@ date_s4<-last(s4_df$observations.date)
 #date_s4
 ```
 
+
+```{r civilian_labor_force_participation, include=FALSE,cache=FALSE}
+#Participation 
+s5<-"series_id=CIVPART"      #is the seasonally adjusted level Percent, Seasonally Adjusted
+s5<-fromJSON(paste0(url, s5, api_key,file_type))
+s5_df<-as.data.frame(s5)
+charvec<-as.Date(as.character(s5_df[,15]))
+data<-as.numeric(s5_df[,16])
+s5<-as.timeSeries(data, charvec)
+date_s5<-last(s5_df$observations.date)
+tail(s5)
+date_s5
+```
+
+
+
+
 ```{r output, include=FALSE, cache=FALSE}
 # FORECAST
 
@@ -95,30 +112,32 @@ fit1 <- auto.arima(s1)
 fit2 <- auto.arima(s2)
 fit3 <- auto.arima(s3)
 fit4 <- auto.arima(s4)
-
+fit5 <- auto.arima(s5)
 
 ts1_cast3<-forecast(fit1, 3)
 ts2_cast3<-forecast(fit2, 3)
 ts3_cast3<-forecast(fit3, 3)
 ts4_cast3<-forecast(fit4, 3)
-
+ts5_cast3<-forecast(fit5, 3)
 
 acc1<-accuracy(fit1)
 acc2<-accuracy(fit2)
 acc3<-accuracy(fit3)
 acc4<-accuracy(fit4)
+acc5<-accuracy(fit5)
 me1<-acc1[1,1]
 me2<-acc2[1,1]
 me3<-acc3[1,1]
 me4<-acc4[1,1]
-me<-round(c(me1,me2,me3,me4),4)
+me5<-acc5[1,1]
+me<-round(c(me1,me2,me3,me4,me5),4)
 
-parameter<-c("Employment", "Inflation", "RealGDP", "Unemployment")
-avdate<-c(date_s1,date_s2,date_s3,date_s4)
-value3<-round(c(ts1_cast3$mean,ts2_cast3$mean,ts3_cast3$mean,ts4_cast3$mean),4)
-value3<-as.data.frame(matrix(c(value3),nrow=4,ncol=3,byrow=TRUE))
-last<-round(c(last(s1),last(s2),last(s3), last(s4)),4)
-freq<-c("monthly","monthly","quarterly","monthly")
+parameter<-c("Employment", "Inflation", "RealGDP", "Unemployment","LaborParticipation")
+avdate<-c(date_s1,date_s2,date_s3,date_s4, date_s5)
+value3<-round(c(ts1_cast3$mean,ts2_cast3$mean,ts3_cast3$mean,ts4_cast3$mean, ts5_cast3$mean),4)
+value3<-as.data.frame(matrix(c(value3),nrow=5,ncol=3,byrow=TRUE))
+last<-round(c(last(s1),last(s2),last(s3), last(s4), last(s5)),4)
+freq<-c("monthly","monthly","quarterly","monthly", "monthly")
 forecast<-data.frame(parameter,freq, last,avdate, value3, me)#%, unit)
 colnames(forecast) <- c("Parameter", "freq","last","AvDate", "Fcast+1","Fcast+2","Fcast+3","ME")#, "Desc")
 ```
@@ -141,7 +160,14 @@ Payroll Employment is an estimate of the number of workers U.S. firms employ and
 plot(forecast(fit1,12),main="Payroll Employment Monthly Change",36,ylab="thousands",ylim=c(-100,+400),cex.lab=0.75)
 ```
 
+## Civil Force Participation
+Measures the labor force as a percentage of the civilian noninstitutional population, that is people 16 years of age and older residing in the 50 states and District of Columbia, who are not inmates of institutions (e.g., penal and mental facilities, homes for the aged) and who are not on active duty in the Armed Forces.
 
+```{r, echo=FALSE, message=FALSE}
+plot(forecast(fit5,24),main="Civil Force Participation",436,ylab="%",cex.lab=0.75)
+abline( h = mean(as.numeric(s5_df$observations.value)))
+text(paste("Mean =", round(mean(as.numeric(s5_df$observations.value)), 1), "\nMedian =", round(median(as.numeric(s5_df$observations.value)), 1), "\nStd.Dev =", round(sd(as.numeric(s5_df$observations.value)))))
+```
 
 ## Real GDP Growth
 Quarterly, Percent Change from Preceding Period, Seasonally Adjusted Annual Rate (rounded to nearest .1%).

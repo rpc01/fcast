@@ -44,19 +44,21 @@ tail(s1)
 
 
 ```{r inflation, cache=FALSE,include=FALSE}
-s2<-"series_id=CPIAUCSL"    #"seasonally adjusted annualized monthly percentage change in headline CPI
-                            #rounded to the nearest tenth of a percent"Inflation is usually reported in terms of year to year changes. In this game, you will be considering monthly changes at an annualized rate. Often, the monthly change in the CPI reflects short-term price changes in goods and services with volatile prices.
+s2<-"series_id=CPIAUCSL"    #"seasonally adjusted annual percentage change in headline CPI
+                            #rounded to the nearest tenth of a percent".
 s2<-fromJSON(paste0(url, s2, api_key,file_type))
 s2_df<-as.data.frame(s2)
 charvec<-as.Date(as.character(s2_df[,15]))
 data<-as.numeric(s2_df[,16])
 s2<-as.timeSeries(data, charvec)
 #tail(s2)
-s2<-((s2/lag(s2,1))^12-1)*100 #annualized percentage change 
+#s2<-((s2/lag(s2,1))^12-1)*100 #annualized percentage change 
+s2<-((s2/lag(s2,12))-1)*100 #YoY percentage change 
 date_s2<-last(s2_df$observations.date)
 tail(s2)
 date_s2
 ```
+
 
 
 ```{r GDP, cache=FALSE,include=FALSE}
@@ -189,9 +191,8 @@ plot(forecast(fit4,12),main="Unemployment",36,ylab="%",ylim=c(4.5,7.5),cex.lab=0
 
 
 ## CPI Inflation
-Monthly Compounded Annual Rate of Change, Seasonally Adjusted (rounded to nearest 0.1%).
+Yeor to Year Rate of Change, Seasonally Adjusted (rounded to nearest 0.1%).
 The Consumer Price Index (CPI) is a measure of the level of prices of a collection of commonly purchased goods and services (e.g., housing, transportation, food and medical care) in an economy over time. The percentage change in the CPI from one period to the next measures inflation.
-Inflation is usually reported in terms of year to year changes. In this game, you will be considering monthly changes at an annualized rate. Often, the monthly change in the CPI reflects short-term price changes in goods and services with volatile prices.
 ```{r, echo=FALSE, message=FALSE}
 plot(forecast(fit2,12),main="Inflation",36,ylab="%",ylim=c(-4,4),cex.lab=0.75)
 ```
